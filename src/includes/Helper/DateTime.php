@@ -2,7 +2,7 @@
 
 namespace WingletDB\Helper;
 
-class Date {
+class DateTime {
   public static function now(): string {
     return date("c");
   }

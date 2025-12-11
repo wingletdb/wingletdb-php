@@ -27,11 +27,10 @@ class Database {
     return null;
   }
 
-  public function findBy($listName, $filter=null): array {
-    $list = $this->getData($listName);
+  public function findFull($filter=null): array {
     $records = [];
 
-    foreach($list as $id => $data){
+    foreach($this->getData("full") as $id => $data){
       $record = Record::load($this->schema, ["id" => $id, ...$data]);
       if(!$filter || $filter($record)){
         $records[$id] = $record;
@@ -41,20 +40,21 @@ class Database {
     return $records;
   }
 
-  public function findFull($filter=null): array {
-    $list = $this->getData("full");
+  public function findList($listName, $filter=null): array {
     $records = [];
 
-    foreach($list as $id => $data){
+    foreach($this->getData("list/{$listName}") as $id => $data){
       $record = Record::load($this->schema, ["id" => $id, ...$data]);
       if(!$filter || $filter($record)){
         $records[$id] = $record;
       }
     }
 
-    // TODO
-
     return $records;
+  }
+
+  public function getView($viewName): mixed {
+    return $this->getData("view/{$viewName}");
   }
 
   public function loadMeta(){

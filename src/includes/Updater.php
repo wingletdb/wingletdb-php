@@ -55,10 +55,10 @@ class Updater {
       $this->save($db->getFilePath("full"), $full);
 
       /* --------------------------------------------------
-       * misc
+       * other derived data
        */
-      $this->updateViews();
-      $this->updateMeta();
+      $this->updateDerived();
+
     });
   }
 
@@ -79,10 +79,9 @@ class Updater {
       $this->save($db->getFilePath("full"), $full);
 
       /* --------------------------------------------------
-       * misc
+       * other derived data
        */
-      $this->updateViews();
-      $this->updateMeta();
+      $this->updateDerived();
     });
   }
 
@@ -101,19 +100,76 @@ class Updater {
       // TODO
 
       /* --------------------------------------------------
-       * misc
-       * */
-      $this->updateViews();
-      $this->updateMeta();
+       * other derived data
+       */
+      $this->updateDerived();
+
     });
+  }
+
+  private function updateDerived() {
+    $this->updateLists();
+    $this->updateViews();
+    $this->updateMeta();
+  }
+
+  private function updateLists() {
+    $db = $this->db;
+
+    foreach($db->schema->lists as $name => $conf){
+      $filter = $conf["filter"] ?? null;
+      $sort   = $conf["sort"] ?? null;
+      $fields = $conf["fields"] ? ["id", ...$conf["fields"]] : null;
+
+      $records = $db->findFull();
+
+      if($filter){
+        $records = array_filter($records, $filter);
+      }
+
+      if($sort){
+        if(is_callable($sort)){
+          uasort($records, $sort);
+
+        }else{
+          uasort($records, function($a, $b)use($sort) {
+            foreach ($sort as $key => $dir) {
+              $av = $a->{$key};
+              $bv = $b->{$key};
+
+              if ($av == $bv) continue;
+
+              $cmp = $av <=> $bv;
+              return $dir === "desc" ? -$cmp : $cmp;
+            }
+
+            return 0;
+          });
+        }
+      }
+
+      $result = [];
+
+      foreach($records as $id => $record){
+        if($fields){
+          $result[$id] = array_combine(
+            $fields,
+            array_map(fn($prop) => $record->{$prop}, $fields)
+          );
+        }else{
+          $result[$id] = $record->toArray();
+        }
+      }
+
+      $this->save($db->getFilePath("lists/{$name}"), $result);
+    }
   }
 
   private function updateViews(){
     $db = $this->db;
-    $fullRecords = $db->findFull();
 
     foreach($db->schema->views as $name => $generator){
-      $this->save($db->getFilePath($name), $generator($fullRecords, $db));
+      $this->save($db->getFilePath("views/{$name}"), $generator($db));
     }
   }
 

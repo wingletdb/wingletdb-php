@@ -1,3 +1,7 @@
+```shellscript
+$ composer require wingletdb/wingletdb .
+```
+
 ```php
 <?php
 
@@ -9,15 +13,16 @@ $winglet = new WingletDB\Manager([
 ]);
 
 $userDB = $winglet->getDB("user");
+// $blogDB = $winglet->getDB("blog");
+// $termDB = $winglet->getDB("term");
 ```
 
 # add record
 
 ```php
-$user = $userDB->create([
-  "name" => "admin",
-  "email" => "admin@example.com",
-]);
+$user = $userDB->create();
+$user->set("name", "admin");
+$user->set("email", "admin@example.com");
 
 $userDB->updater->saveRecord($user);
 ```
@@ -39,10 +44,19 @@ echo $user->email;
 
 ```php
 $users = $userDB->findFull();
+
+// filter
+$users = $userDB->findFull(fn($user) => $user->status === "active");
 ```
 
-# findBy
+# findList
 
 ```php
-$users = $userDB->findBy("list");
+$users = $userDB->findList("summary");
+```
+
+# getView
+
+```php
+$view = $userDB->getView("count");
 ```

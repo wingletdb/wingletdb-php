@@ -1,31 +1,26 @@
 <?php
 
-use WingletDB\Helper\Date;
+use WingletDB\Helper\DateTime;
 use WingletDB\Helper\Password;
+use WingletDB\Helper\Text;
 
 return [
   "id" => "auto",
   "fields" => [
-    "name" => true,
-    "email" => true,
+    "name" => Text::normalize(...),
+    "email" => Text::normalize(...),
     "password" => Password::normalize(...),
-    "createdAt" => Date::normalizeCreatedAt(...),
-    "updatedAt" => Date::normalize(...)
+    "createdAt" => DateTime::normalizeCreatedAt(...),
+    "updatedAt" => DateTime::normalize(...)
+  ],
+  "lists" => [
+    "summary" => [
+      "fields" => ["name", "email"],
+      "filter" => fn($record) => $record->email !== "",
+      "sort" => ["updatedAt" => "desc"]
+    ]
   ],
   "views" => [
-    "list" => function($fullRecords, $db){
-      $records = [];
-
-      foreach($fullRecords as $id => $record){
-        $records[$id] = [
-          "name" => $record->name,
-          "email" => $record->email,
-          "createdAt" => $record->createdAt,
-          "updatedAt" => $record->updatedAt
-        ];
-      }
-
-      return $records;
-    }
+    "count" => fn($db) => ["count" => count($db->findFull())]
   ]
 ];

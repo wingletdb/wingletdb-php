@@ -5,12 +5,14 @@ namespace WingletDB;
 class Schema {
   public string $idType; // auto | uuid | string
   public array $fields;
+  public array $lists;
   public array $views;
 
   public function __construct(array $schema){
     $this->idType = $schema["id"];
     $this->fields = $schema["fields"];
-    $this->views = $schema["views"];
+    $this->lists = $schema["lists"] ?? [];
+    $this->views = $schema["views"] ?? [];
   }
 
   public function has(string $fieldName): bool {
