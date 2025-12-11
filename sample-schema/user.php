@@ -1,23 +1,18 @@
 <?php
 
-use WingletDB\Record;
+use WingletDB\Helper\Date;
+use WingletDB\Helper\Password;
 
 return [
   "id" => "auto",
   "fields" => [
-    "name" => fn($v, $record) => $v,
-    "email" => fn($v, $record) => $v,
-    "password" => function($v, $record){
-      if(!$v) return "";
-      if(strpos($v, "hashed:") === FALSE){
-        return "hashed:" . password_hash($v, PASSWORD_DEFAULT);
-      }
-      return $v;
-    },
-    "createdAt" => fn($v, $record) => $v ?? date("Y-m-d H:i:s"),
-    "updatedAt" => fn($v, $record) => date("Y-m-d H:i:s")
+    "name" => true,
+    "email" => true,
+    "password" => Password::normalize(...),
+    "createdAt" => Date::normalizeCreatedAt(...),
+    "updatedAt" => Date::normalize(...)
   ],
-  "lists" => [
+  "views" => [
     "list" => function($fullRecords, $db){
       $records = [];
 

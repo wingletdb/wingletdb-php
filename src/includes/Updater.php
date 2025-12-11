@@ -2,6 +2,8 @@
 
 namespace WingletDB;
 
+use WingletDB\Helper\ID;
+
 class Updater {
   public function __construct(
     private Database $db
@@ -15,12 +17,18 @@ class Updater {
       $db->loadMeta();
 
       if($isNew){
-        if($db->schema->idType === "auto"){
-          // id なければ発行
-          $record->id = $db->meta->incrementCounter();
+        // id なければ発行
+        switch($db->schema->idType){
+          case "auto":
+            $record->id = $db->meta->incrementCounter();
+            break;
 
-        }else{
-          throw new \Exception(); // TODO
+          case "uuid":
+            $record->id = ID::uuidv4();
+            break;
+
+          default:
+            throw new \Exception(); // TODO
         }
       }
 
@@ -49,7 +57,7 @@ class Updater {
       /* --------------------------------------------------
        * misc
        */
-      $this->updateLists();
+      $this->updateViews();
       $this->updateMeta();
     });
   }
@@ -73,7 +81,7 @@ class Updater {
       /* --------------------------------------------------
        * misc
        */
-      $this->updateLists();
+      $this->updateViews();
       $this->updateMeta();
     });
   }
@@ -95,16 +103,16 @@ class Updater {
       /* --------------------------------------------------
        * misc
        * */
-      $this->updateLists();
+      $this->updateViews();
       $this->updateMeta();
     });
   }
 
-  private function updateLists(){
+  private function updateViews(){
     $db = $this->db;
     $fullRecords = $db->findFull();
 
-    foreach($db->schema->getListStructures() as $name => $generator){
+    foreach($db->schema->views as $name => $generator){
       $this->save($db->getFilePath($name), $generator($fullRecords, $db));
     }
   }

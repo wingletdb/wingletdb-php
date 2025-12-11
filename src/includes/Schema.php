@@ -3,14 +3,14 @@
 namespace WingletDB;
 
 class Schema {
-  public string $idType; // auto | string
+  public string $idType; // auto | uuid | string
   public array $fields;
-  private array $listStructures;
+  public array $views;
 
   public function __construct(array $schema){
     $this->idType = $schema["id"];
     $this->fields = $schema["fields"];
-    $this->listStructures = $schema["lists"];
+    $this->views = $schema["views"];
   }
 
   public function has(string $fieldName): bool {
@@ -19,9 +19,5 @@ class Schema {
     }
 
     return false;
-  }
-
-  public function getListStructures(): array {
-    return $this->listStructures;
   }
 }
