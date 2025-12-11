@@ -13,6 +13,9 @@ class Schema {
     $this->fields = $schema["fields"];
     $this->lists = $schema["lists"] ?? [];
     $this->views = $schema["views"] ?? [];
+
+    // TODO
+    // indexes
   }
 
   public function has(string $fieldName): bool {

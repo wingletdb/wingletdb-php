@@ -6,15 +6,10 @@ class Meta {
   public array $data;
 
   public function __construct(array|null $data=null){
-    if($data){
-      $this->data = $data;
-    }else{
-      $this->data = [
-        "counter" => 0,
-        "updatedAt" => time()
-        // TODO
-      ];
-    }
+    $this->data = [
+      "counter" => $data["counter"] ?? 0,
+      "updatedAt" => $data["updatedAt"] ?? time()
+    ];
   }
 
   public function incrementCounter(): int {
@@ -22,7 +17,7 @@ class Meta {
     return $this->data["counter"];
   }
 
-  public function update(): void {
+  public function update($records): void {
     $this->data["updatedAt"] = time();
   }
 }

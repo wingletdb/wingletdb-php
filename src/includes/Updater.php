@@ -45,19 +45,20 @@ class Updater {
       /* --------------------------------------------------
        * full.json
        */
-      $full = $db->getData("full", []);
+      $fullArray = $db->getData("full", []);
 
-      if($isNew && isset($full[$record->id])){
+      if($isNew && isset($fullArray[$record->id])){
         throw new \Exception(); // TODO
       }
 
-      $full[$record->id] = $record->toArray();
-      $this->save($db->getFilePath("full"), $full);
+      $fullArray[$record->id] = $record->toArray();
+      $this->save($db->getFilePath("full"), $fullArray);
 
       /* --------------------------------------------------
        * other derived data
        */
-      $this->updateDerived();
+      $records = $db->findMany();
+      $this->updateDerived($records);
 
     });
   }
@@ -74,20 +75,22 @@ class Updater {
       /* --------------------------------------------------
        * full.json
        */
-      $full = $db->getData("full", []);
-      unset($full[$id]);
-      $this->save($db->getFilePath("full"), $full);
+      $fullArray = $db->getData("full", []);
+      unset($fullArray[$id]);
+      $this->save($db->getFilePath("full"), $fullArray);
 
       /* --------------------------------------------------
        * other derived data
        */
-      $this->updateDerived();
+      $records = $db->findMany();
+      $this->updateDerived($records);
     });
   }
 
   public function rebuild(){
     $this->transaction(function(){
       $db = $this->db;
+      $records = $db->findMany();
 
       /* --------------------------------------------------
        * records/[id].json
@@ -102,26 +105,24 @@ class Updater {
       /* --------------------------------------------------
        * other derived data
        */
-      $this->updateDerived();
+      $this->updateDerived($records);
 
     });
   }
 
-  private function updateDerived() {
-    $this->updateLists();
-    $this->updateViews();
-    $this->updateMeta();
+  private function updateDerived($records) {
+    $this->updateLists($records);
+    $this->updateViews($records);
+    $this->updateMeta($records);
   }
 
-  private function updateLists() {
+  private function updateLists($records) {
     $db = $this->db;
 
     foreach($db->schema->lists as $name => $conf){
       $filter = $conf["filter"] ?? null;
       $sort   = $conf["sort"] ?? null;
       $fields = $conf["fields"] ? ["id", ...$conf["fields"]] : null;
-
-      $records = $db->findFull();
 
       if($filter){
         $records = array_filter($records, $filter);
@@ -165,17 +166,17 @@ class Updater {
     }
   }
 
-  private function updateViews(){
+  private function updateViews($records){
     $db = $this->db;
 
     foreach($db->schema->views as $name => $generator){
-      $this->save($db->getFilePath("views/{$name}"), $generator($db));
+      $this->save($db->getFilePath("views/{$name}"), $generator($records, $db));
     }
   }
 
-  private function updateMeta(){
+  private function updateMeta($records){
     $db = $this->db;
-    $db->meta->update();
+    $db->meta->update($records);
     $this->save($db->getFilePath("meta"), $db->meta->data);
   }
 

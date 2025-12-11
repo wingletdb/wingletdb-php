@@ -19,7 +19,7 @@ class Database {
     return new Record($this->schema, $data);
   }
 
-  public function findOne(mixed $id): Record|null {
+  public function get(mixed $id): Record|null {
     if($this->recordExists($id)){
       return Record::load($this->schema, $this->getRecordData($id));
     }
@@ -27,7 +27,12 @@ class Database {
     return null;
   }
 
-  public function findFull($filter=null): array {
+  public function getBy($fieldName, $value): Record|null {
+    $records = $this->findMany(fn($record) => $record->{$fieldName} === $value);
+    return array_shift($records);
+  }
+
+  public function findMany($filter=null): array {
     $records = [];
 
     foreach($this->getData("full") as $id => $data){

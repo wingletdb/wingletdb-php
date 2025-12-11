@@ -2,7 +2,7 @@
 
 namespace WingletDB\Helper;
 
-class Integer {
+class Number {
   public static function normalizeInt($v, $record): string {
     return intval($v) ?? 0;
   }

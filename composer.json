@@ -1,6 +1,6 @@
 {
     "name": "wingletdb/wingletdb",
-    "description": "Schema based JSON DB Library",
+    "description": "Schema Driven JSON DB Library",
     "type": "library",
     "license": "MIT",
     "authors": [

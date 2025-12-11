@@ -33,20 +33,27 @@ $userDB->updater->saveRecord($user);
 $userDB->updater->deleteRecord(1);
 ```
 
-# findOne
+# get
 
 ```php
-$user = $userDB->findOne(1);
+$user = $userDB->get(1);
 echo $user->email;
 ```
 
-# findFull
+# getBy
 
 ```php
-$users = $userDB->findFull();
+$user = $userDB->getBy("email", "info@example.com");
+echo $user->name;
+```
+
+# findMany
+
+```php
+$users = $userDB->findMany();
 
 // filter
-$users = $userDB->findFull(fn($user) => $user->status === "active");
+$users = $userDB->findMany(fn($user) => $user->status === "active");
 ```
 
 # findList

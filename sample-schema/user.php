@@ -21,6 +21,6 @@ return [
     ]
   ],
   "views" => [
-    "count" => fn($db) => ["count" => count($db->findFull())]
+    "count" => fn($records, $db) => ["count" => count($records)]
   ]
 ];
