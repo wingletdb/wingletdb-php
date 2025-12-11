@@ -1,0 +1,19 @@
+{
+    "name": "wingletdb/wingletdb",
+    "description": "Schema based JSON DB Library",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "green spot",
+            "email": "in.green.spot@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "WingletDB\\": "src/includes/"
+        }
+    },
+    "require": {
+    }
+}
