@@ -55,6 +55,10 @@ class Record {
     $this->data[$fieldName] = $value;
   }
 
+  public function __set(string $name, mixed $value) {
+    $this->set($name, $value);
+  }
+
   public function bind(array $data): void {
     $this->id = $data["id"] ?? null;
 
