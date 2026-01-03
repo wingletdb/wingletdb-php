@@ -57,7 +57,7 @@ class Updater {
       /* --------------------------------------------------
        * other derived data
        */
-      $records = $db->findMany();
+      $records = $db->find();
       $this->updateDerived($records);
 
     });
@@ -82,7 +82,7 @@ class Updater {
       /* --------------------------------------------------
        * other derived data
        */
-      $records = $db->findMany();
+      $records = $db->find();
       $this->updateDerived($records);
     });
   }
@@ -90,7 +90,7 @@ class Updater {
   public function rebuild(){
     $this->transaction(function(){
       $db = $this->db;
-      $records = $db->findMany();
+      $records = $db->find();
 
       /* --------------------------------------------------
        * records/[id].json
@@ -194,5 +194,133 @@ class Updater {
 
   private function delete($path){
     if(file_exists($path)) unlink($path);
+  }
+
+  /**
+   * レコードを指定位置に移動
+   *
+   * @param string|int $id 移動するレコードのID
+   * @param int $newPosition 新しい位置（0-indexed）
+   */
+  public function moveRecord(string|int $id, int $newPosition): void {
+    $this->transaction(function() use ($id, $newPosition) {
+      $db = $this->db;
+      $fullArray = $db->getData("full", []);
+
+      if (!isset($fullArray[$id])) {
+        throw new \Exception("Record not found: {$id}");
+      }
+
+      // 配列を再構築
+      $keys = array_keys($fullArray);
+      $values = array_values($fullArray);
+
+      // 現在の位置を取得
+      $currentIndex = array_search($id, $keys);
+
+      if ($currentIndex === false) {
+        throw new \Exception("Record not found in keys: {$id}");
+      }
+
+      // 要素を削除
+      $key = $keys[$currentIndex];
+      $value = $values[$currentIndex];
+      array_splice($keys, $currentIndex, 1);
+      array_splice($values, $currentIndex, 1);
+
+      // 新しい位置に挿入
+      $newPosition = max(0, min($newPosition, count($keys)));
+      array_splice($keys, $newPosition, 0, [$key]);
+      array_splice($values, $newPosition, 0, [$value]);
+
+      // 連想配列を再構築
+      $fullArray = array_combine($keys, $values);
+
+      // 保存
+      $this->save($db->getFilePath("full"), $fullArray);
+
+      // derived dataを更新
+      $records = $db->find();
+      $this->updateDerived($records);
+    });
+  }
+
+  /**
+   * 2つのレコードの位置を入れ替え
+   *
+   * @param string|int $id1 レコード1のID
+   * @param string|int $id2 レコード2のID
+   */
+  public function swapRecords(string|int $id1, string|int $id2): void {
+    $this->transaction(function() use ($id1, $id2) {
+      $db = $this->db;
+      $fullArray = $db->getData("full", []);
+
+      if (!isset($fullArray[$id1]) || !isset($fullArray[$id2])) {
+        throw new \Exception("One or both records not found");
+      }
+
+      // 配列のキーを保持したまま値を入れ替え
+      $keys = array_keys($fullArray);
+      $index1 = array_search($id1, $keys);
+      $index2 = array_search($id2, $keys);
+
+      if ($index1 === false || $index2 === false) {
+        throw new \Exception("Record IDs not found in keys");
+      }
+
+      // キーの位置を入れ替え
+      [$keys[$index1], $keys[$index2]] = [$keys[$index2], $keys[$index1]];
+
+      // 新しい順序で連想配列を再構築
+      $newFullArray = [];
+      foreach ($keys as $key) {
+        $newFullArray[$key] = $fullArray[$key];
+      }
+
+      // 保存
+      $this->save($db->getFilePath("full"), $newFullArray);
+
+      // derived dataを更新
+      $records = $db->find();
+      $this->updateDerived($records);
+    });
+  }
+
+  /**
+   * レコードを完全に並び替え
+   *
+   * @param array $orderedIds 新しい順序のID配列
+   */
+  public function reorderRecords(array $orderedIds): void {
+    $this->transaction(function() use ($orderedIds) {
+      $db = $this->db;
+      $fullArray = $db->getData("full", []);
+
+      // すべてのIDが存在するかチェック
+      foreach ($orderedIds as $id) {
+        if (!isset($fullArray[$id])) {
+          throw new \Exception("Record not found: {$id}");
+        }
+      }
+
+      // 指定されていないレコードがあればエラー
+      if (count($orderedIds) !== count($fullArray)) {
+        throw new \Exception("All records must be specified in reorder");
+      }
+
+      // 新しい順序で連想配列を再構築
+      $newFullArray = [];
+      foreach ($orderedIds as $id) {
+        $newFullArray[$id] = $fullArray[$id];
+      }
+
+      // 保存
+      $this->save($db->getFilePath("full"), $newFullArray);
+
+      // derived dataを更新
+      $records = $db->find();
+      $this->updateDerived($records);
+    });
   }
 }

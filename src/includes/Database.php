@@ -19,6 +19,9 @@ class Database {
     return new Record($this->schema, $data);
   }
 
+  /**
+   * IDで単一レコードを取得
+   */
   public function get(mixed $id): Record|null {
     if($this->recordExists($id)){
       return Record::load($this->schema, $this->getRecordData($id));
@@ -27,12 +30,21 @@ class Database {
     return null;
   }
 
+  /**
+   * フィールド条件で単一レコードを取得（最初の1件）
+   */
   public function getBy($fieldName, $value): Record|null {
-    $records = $this->findMany(fn($record) => $record->{$fieldName} === $value);
+    $records = $this->find(fn($record) => $record->{$fieldName} === $value);
     return array_shift($records);
   }
 
-  public function findMany($filter=null): array {
+  /**
+   * 全レコードを連想配列で検索（ID => Record）
+   *
+   * @param callable|null $filter フィルター関数
+   * @return array 連想配列（ID => Record）
+   */
+  public function find($filter=null): array {
     $records = [];
 
     foreach($this->getData("full") as $id => $data){
@@ -45,10 +57,36 @@ class Database {
     return $records;
   }
 
-  public function findList($listName, $filter=null): array {
+  /**
+   * 全レコードをインデックス配列で検索（順序保証）
+   *
+   * @param callable|null $filter フィルター関数
+   * @return array インデックス配列（0 => Record, 1 => Record, ...）
+   */
+  public function findOrdered($filter=null): array {
     $records = [];
 
-    foreach($this->getData("list/{$listName}") as $id => $data){
+    foreach($this->getData("full") as $id => $data){
+      $record = Record::load($this->schema, ["id" => $id, ...$data]);
+      if(!$filter || $filter($record)){
+        $records[] = $record;
+      }
+    }
+
+    return $records;
+  }
+
+  /**
+   * リストから検索
+   *
+   * @param string $listName リスト名
+   * @param callable|null $filter フィルター関数
+   * @return array 連想配列（ID => Record）
+   */
+  public function list($listName, $filter=null): array {
+    $records = [];
+
+    foreach($this->getData("lists/{$listName}") as $id => $data){
       $record = Record::load($this->schema, ["id" => $id, ...$data]);
       if(!$filter || $filter($record)){
         $records[$id] = $record;
@@ -58,8 +96,14 @@ class Database {
     return $records;
   }
 
-  public function getView($viewName): mixed {
-    return $this->getData("view/{$viewName}");
+  /**
+   * ビューを取得
+   *
+   * @param string $viewName ビュー名
+   * @return mixed ビューデータ
+   */
+  public function view($viewName): mixed {
+    return $this->getData("views/{$viewName}");
   }
 
   public function loadMeta(){

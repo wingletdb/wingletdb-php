@@ -47,23 +47,50 @@ $user = $userDB->getBy("email", "info@example.com");
 echo $user->name;
 ```
 
-# findMany
+# find
 
 ```php
-$users = $userDB->findMany();
+// 連想配列（ID => Record）で取得
+$users = $userDB->find();
 
 // filter
-$users = $userDB->findMany(fn($user) => $user->status === "active");
+$users = $userDB->find(fn($user) => $user->status === "active");
 ```
 
-# findList
+# findOrdered
 
 ```php
-$users = $userDB->findList("summary");
+// インデックス配列（0 => Record, 1 => Record, ...）で取得（順序保証）
+$users = $userDB->findOrdered();
+
+// filter
+$users = $userDB->findOrdered(fn($user) => $user->status === "active");
 ```
 
-# getView
+# list
 
 ```php
-$view = $userDB->getView("count");
+// リストから検索
+$users = $userDB->list("summary");
+$users = $userDB->list("summary", fn($user) => $user->status === "active");
+```
+
+# view
+
+```php
+// ビューを取得
+$view = $userDB->view("count");
+```
+
+# order records
+
+```php
+// レコードを指定位置に移動
+$userDB->updater->moveRecord($id, 2);
+
+// 2つのレコードの位置を入れ替え
+$userDB->updater->swapRecords($id1, $id2);
+
+// レコードを完全に並び替え
+$userDB->updater->reorderRecords([3, 1, 2]);
 ```
