@@ -260,8 +260,10 @@ class Updater {
         throw new \Exception("One or both records not found");
       }
 
-      // 配列のキーを保持したまま値を入れ替え
+      // キーと値のペアの位置を入れ替える
       $keys = array_keys($fullArray);
+      $values = array_values($fullArray);
+
       $index1 = array_search($id1, $keys);
       $index2 = array_search($id2, $keys);
 
@@ -269,14 +271,12 @@ class Updater {
         throw new \Exception("Record IDs not found in keys");
       }
 
-      // キーの位置を入れ替え
+      // キーと値の両方を入れ替え
       [$keys[$index1], $keys[$index2]] = [$keys[$index2], $keys[$index1]];
+      [$values[$index1], $values[$index2]] = [$values[$index2], $values[$index1]];
 
       // 新しい順序で連想配列を再構築
-      $newFullArray = [];
-      foreach ($keys as $key) {
-        $newFullArray[$key] = $fullArray[$key];
-      }
+      $newFullArray = array_combine($keys, $values);
 
       // 保存
       $this->save($db->getFilePath("full"), $newFullArray);
